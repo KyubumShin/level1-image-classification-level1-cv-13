@@ -1,0 +1,34 @@
+seed: 42
+log_name: resnet34_focal_StepLR
+epoch: 10
+n_splits: 5
+target: age_group
+data_dir: ../../input/data/train/train.csv
+data:
+  image_dir: ../../input/data/train/images
+  min: 30
+  max: 59
+dataloader:
+  batch_size: 64
+  shuffle: true
+  num_workers: 4
+  pin_memory: false
+  drop_last: true
+model:
+  name: resnet34
+  num_class: 3
+loss: focal
+optim:
+  name: optim.AdamW
+  params:
+    lr: 1.0e-05
+sche:
+  name: lr_scheduler.StepLR
+  params:
+    step_size : 10
+    gamma : 0.5
+trainer:
+  gpus: 1
+  accumulate_grad_batches: 1
+  progress_bar_refresh_rate: 1
+  fast_dev_run: false
