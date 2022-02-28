@@ -72,7 +72,7 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __make_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        temp = pd.DataFrame(columns=['id', 'gender', 'age', 'age_group', 'mask', 'path', 'label'])
+        temp = pd.DataFrame(columns=['id', 'gender', 'age', 'age_group', 'age_group2', 'mask', 'path', 'label'])
         for line in df.iloc:
             for file in list(os.listdir(os.path.join(self.config.data.image_dir, line['path']))):
                 _file_name, ext = os.path.splitext(file)
@@ -81,11 +81,13 @@ class CustomDataset(Dataset):
                 mask_label = self._file_names[_file_name]
                 gender_label = GenderLabels.from_str(line['gender'])
                 age_group = self.age_group(line['age'])
+                age_2 = self.age_group2(line['age'])
                 data = {
                     'id': line['path'],
                     'gender': gender_label,
                     'age': line['age'],
                     'age_group': age_group,
+                    'age_group2': age_2,
                     'mask': mask_label,
                     'path': os.path.join(self.config.data.image_dir, line['path'], file),
                     'label': mask_label * 6 + gender_label * 3 + age_group
@@ -100,6 +102,18 @@ class CustomDataset(Dataset):
             return 1
         else:
             return 2
+
+    def age_group2(self, x):
+        if x < 20:
+            return 0
+        elif x < 30:
+            return 1
+        elif x < 50:
+            return 2
+        elif x < self.config.data.max:
+            return 3
+        else:
+            return 4
 
     def __getitem__(self, index):
         data = self.data.iloc[index]
@@ -135,7 +149,8 @@ class CustomDataLoader(LightningDataModule):
 class CustomTransform:
     def __init__(self, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
         self.share_transform = transforms.Compose([
-            transforms.CenterCrop([320, 320])
+            transforms.CenterCrop([320, 320]),
+            transforms.Resize([224, 224])
         ])
         self.mean = mean
         self.std = std
@@ -154,3 +169,18 @@ class CustomTransform:
             transforms.ConvertImageDtype(torch.float),
             transforms.Normalize(mean=self.mean, std=self.std),
         ])
+
+
+class TestDataset(Dataset):
+    def __init__(self, img_paths, transform):
+        self.img_paths = img_paths
+        self.transform = transform
+
+    def __getitem__(self, index):
+        image = read_image(self.img_paths[index])
+        if self.transform:
+            image = self.transform(image)
+        return image
+
+    def __len__(self):
+        return len(self.img_paths)

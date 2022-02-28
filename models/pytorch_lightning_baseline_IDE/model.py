@@ -16,8 +16,9 @@ class ClassificationModel(pl.LightningModule):
         self.config = cfg
         self.feature = timm.create_model(self.config.model.name, pretrained=True,
                                          num_classes=self.config.model.num_class)
-        self._criterion = loss.create_criterion(self.config.loss)
+        self._criterion = loss.create_criterion(self.config.loss.name, **self.config.loss.params)
         self.f1_score = torchmetrics.F1Score(num_classes=self.config.model.num_class, average='macro', mdmc_average='global')
+        self.learning_rate = self.config.lr
 
     def forward(self, x):
         return self.feature(x)
@@ -32,7 +33,7 @@ class ClassificationModel(pl.LightningModule):
         preds, loss, acc, labels = self.__share_step(batch, 'val')
         self.log("val_loss", loss)
         self.log("val_accuracy", acc)
-        return {"pred": preds.detach(), 'labels': labels.detach()}
+        return {"loss": loss, "pred": preds, 'labels': labels}
 
     def __share_step(self, batch, mode):
         x, y = batch
@@ -56,6 +57,7 @@ class ClassificationModel(pl.LightningModule):
         """
         preds = []
         labels = []
+        losses = []
         for out in outputs:
             pred, label = out['pred'], out['labels']
             preds.append(pred)
@@ -68,7 +70,7 @@ class ClassificationModel(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = eval(self.config.optim.name)(
-            self.parameters(), **self.config.optim.params)
+            self.parameters(), lr=self.learning_rate)
         scheduler = eval(self.config.sche.name)(
             optimizer,
             **self.config.sche.params

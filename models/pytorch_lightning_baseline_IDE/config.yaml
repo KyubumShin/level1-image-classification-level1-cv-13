@@ -1,5 +1,5 @@
 seed: 42
-log_name: resnet34_focal_StepLR
+log_name: beit16224-age_group
 epoch: 10
 n_splits: 5
 target: age_group
@@ -7,7 +7,7 @@ data_dir: ../../input/data/train/train.csv
 data:
   image_dir: ../../input/data/train/images
   min: 30
-  max: 59
+  max: 58
 dataloader:
   batch_size: 64
   shuffle: true
@@ -15,20 +15,22 @@ dataloader:
   pin_memory: false
   drop_last: true
 model:
-  name: resnet34
+  name: beit_base_patch16_224
   num_class: 3
-loss: focal
+loss:
+  name: label_smoothing
+  params:
+    smoothing: 0.05
+lr: 0.0003
 optim:
   name: optim.AdamW
-  params:
-    lr: 1.0e-05
 sche:
   name: lr_scheduler.StepLR
   params:
-    step_size : 10
-    gamma : 0.5
+    step_size: 2
+    gamma: 0.5
 trainer:
   gpus: 1
   accumulate_grad_batches: 1
-  progress_bar_refresh_rate: 1
   fast_dev_run: false
+  precision: 16
