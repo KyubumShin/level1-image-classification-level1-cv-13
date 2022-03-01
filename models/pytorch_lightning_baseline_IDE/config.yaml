@@ -1,0 +1,36 @@
+seed: 42
+log_name: beit16224-age_group
+epoch: 10
+n_splits: 5
+target: age_group
+data_dir: ../../input/data/train/train.csv
+data:
+  image_dir: ../../input/data/train/images
+  min: 30
+  max: 58
+dataloader:
+  batch_size: 64
+  shuffle: true
+  num_workers: 4
+  pin_memory: false
+  drop_last: true
+model:
+  name: beit_base_patch16_224
+  num_class: 3
+loss:
+  name: label_smoothing
+  params:
+    smoothing: 0.05
+lr: 0.0003
+optim:
+  name: optim.AdamW
+sche:
+  name: lr_scheduler.StepLR
+  params:
+    step_size: 2
+    gamma: 0.5
+trainer:
+  gpus: 1
+  accumulate_grad_batches: 1
+  fast_dev_run: false
+  precision: 16
