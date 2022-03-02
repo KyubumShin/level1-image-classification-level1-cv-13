@@ -1,0 +1,17 @@
+mask:
+  model_dir:
+    - /opt/ml/code/pl_baseline/pit_mask_5fold/default/version_2/checkpoints/best_score.ckpt
+  config_dir:
+    - /opt/ml/code/pl_baseline/pit_mask_5fold/config.yaml
+gender:
+  model_dir:
+    - /opt/ml/code/pl_baseline/pit_gender_5fold/default/version_0/checkpoints/best_score.ckpt
+  config_dir:
+    - /opt/ml/code/pl_baseline/pit_gender_5fold/config.yaml
+age:
+  model_dir:
+    - /opt/ml/code/pl_baseline/pit_CE_age_5fold/default/version_0/checkpoints/best_score.ckpt
+    - /opt/ml/code/pl_baseline/pit_CE_age_5fold/default/version_1/checkpoints/best_score.ckpt
+  config_dir:
+    - /opt/ml/code/pl_baseline/pit_CE_age_5fold/config.yaml
+    - /opt/ml/code/pl_baseline/pit_CE_age_5fold/config.yaml
