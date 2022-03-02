@@ -1,18 +1,19 @@
 import os
 import pandas as pd
+import numpy as np
 import argparse
-import torch
 import yaml
 from box import Box
 from tqdm import tqdm
-import gc
+
+import torch
+from torch.utils.data import DataLoader
 
 from model import ClassificationModel
-from torch.utils.data import DataLoader
 from dataset import CustomTransform, TestDataset
 
 
-def __model_load(config_dir, model_dir, df: pd.DataFrame, loader) -> pd.DataFrame:
+def __model_load(config_dir, model_dir, loader, target) -> np.ndarray:
     with open(os.path.join(config_dir), "r") as f:
         config = yaml.safe_load(f)
     config = Box(config)
@@ -20,17 +21,15 @@ def __model_load(config_dir, model_dir, df: pd.DataFrame, loader) -> pd.DataFram
     model = ClassificationModel(config)
     model.load_state_dict(torch.load(model_dir)['state_dict'])
     model = model.to(device).eval()
-    print("Done")
     predictions = []
     for images in tqdm(loader, total=len(loader)):
         with torch.no_grad():
             images = images.to(device)
             pred = model(images)
-            pred = pred.argmax(dim=-1)
+            pred = torch.softmax(pred, dim=1)
             predictions.extend(pred.cpu().numpy())
-    df[config.target] = predictions
     del model
-    return df
+    return np.array(predictions)
 
 
 def main(cfg):
@@ -40,18 +39,24 @@ def main(cfg):
     test_transform = CustomTransform().val_transform()
     image_paths = [os.path.join(image_dir, img_id) for img_id in submission.ImageID]
     dataset = TestDataset(image_paths, test_transform)
-
     loader = DataLoader(
         dataset,
         shuffle=False,
     )
     for key, items in cfg.items():
-        submission = __model_load(items.config_dir, items.model_dir, submission, loader)
+        oof_pred = None
+        split = len(items.model_dir)
+        models_dir = items.model_dir
+        configs_dir = items.config_dir
+        for model_dir, config_dir in zip(models_dir, configs_dir):
+            preds = __model_load(config_dir, model_dir, loader, key)
+            if oof_pred is None:
+                oof_pred = preds / split
+            else:
+                oof_pred += preds / split
+        submission[key] = np.argmax(oof_pred, axis=1)
+    submission.to_csv(os.path.join(test_dir, 'submission_test.csv'), index=False)
 
-    submission.to_csv(os.path.join(test_dir, 'submission_sample.csv'), index=False)
-    submission['ans'] = submission['mask'] * 6 + submission['gender'] * 3 + submission['age_group']
-    sub = submission.drop(columns=['age_group', 'mask', 'gender'])
-    sub.to_csv(os.path.join(test_dir, 'submission.csv'), index=False)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
