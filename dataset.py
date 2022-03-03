@@ -65,12 +65,10 @@ class CustomDataset(Dataset):
         "incorrect_mask": MaskLabels.INCORRECT,
         "normal": MaskLabels.NORMAL
     }   
-    def __init__(self, df: pd.DataFrame, cfg, transform: transforms = None, augment: transforms = None, cutmix_cut = None, cutmix_add = None , mode: bool = True):
+    def __init__(self, df: pd.DataFrame, cfg, transform: transforms = None, augment: transforms = None, mode: bool = True):
         self.config = cfg
         self.transform = transform
         self.augment = augment 
-        #self.cutmix_cut = cutmix_cut
-        #self.cutmix_add = cutmix_add
         self.data = self.__make_dataframe(df)
         self.mode = mode
 
@@ -150,7 +148,7 @@ class CustomDataLoader(LightningDataModule):
         self.transform = transform
 
     def train_dataloader(self):
-        train_dataset = CustomDataset(self.train_df, self.config, transform=self.transform.train_transform(), augment=self.transform.aug_transform(), cutmix_cut= self.transform.cutmix_cut, cutmix_add=self.transform.cutmix_add)
+        train_dataset = CustomDataset(self.train_df, self.config, transform=self.transform.train_transform(), augment=self.transform.aug_transform())
         return DataLoader(train_dataset, **self.config.dataloader)
 
     def val_dataloader(self):
