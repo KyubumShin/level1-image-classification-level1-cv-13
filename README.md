@@ -11,6 +11,7 @@ pytorch-lightning==1.5.10
 python-box==5.4.1
 torchmetrics==0.7.2
 torchvision==0.8.2
+adamp==0.3.0
 ```
 
 ## Train (IDE)
