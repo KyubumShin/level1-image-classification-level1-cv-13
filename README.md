@@ -25,3 +25,6 @@ config는 첨부된 예시를 참고해주십시오
 python ensemble.py --config [ENSEMBLE_DIR]
 ```
 config는 첨부된 예시를 참고해주십시오
+
+## 발표자료 
+[CV13_발표자료.pdf](https://github.com/KyubumShin/level1-image-classification-level1-cv-13/files/8997907/CV13_.pdf)
